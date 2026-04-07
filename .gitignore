@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+Frontend/React/node_modules/
+Backend/node_modules/
+
+# Build outputs
+dist/
+Frontend/React/dist/
+Backend/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment overrides (optional)
+*.local
+
+# Editor directories
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+
+# Local environment files should not be committed
+.env
+Frontend/React/.env
+Backend/.env
+
+# Keep all setup scripts (both PowerShell and Node.js)
+# PowerShell scripts are optional and for Windows users only
+

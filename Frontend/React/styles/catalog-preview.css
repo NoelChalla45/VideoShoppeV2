@@ -1,0 +1,199 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap");
+
+.catalog-preview-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(255, 192, 118, 0.2), transparent 36%),
+    radial-gradient(circle at 85% 0%, rgba(78, 200, 179, 0.22), transparent 38%),
+    linear-gradient(160deg, #13161f 15%, #1b2335 55%, #171a24 100%);
+  color: #f5efdd;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  position: relative;
+}
+
+.preview-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.25) 0.45px, transparent 0.45px);
+  background-size: 3px 3px;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.catalog-preview-shell {
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: clamp(1.4rem, 5vw, 3rem) clamp(1rem, 4vw, 3rem) 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.preview-back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  color: #f5efdd;
+  border: 1px solid rgba(245, 239, 221, 0.3);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: rgba(245, 239, 221, 0.08);
+}
+
+.preview-header h1 {
+  margin: 0.55rem 0 0;
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(2.1rem, 7vw, 4.4rem);
+  line-height: 0.95;
+}
+
+.preview-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.73rem;
+  color: #f4b74f;
+}
+
+.preview-header p {
+  max-width: 50rem;
+  color: rgba(245, 239, 221, 0.88);
+}
+
+.preview-actions {
+  margin: 1rem 0 1.8rem;
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.preview-primary,
+.preview-secondary {
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.66rem 1.2rem;
+  font-weight: 700;
+  transition: transform 240ms ease;
+}
+
+.preview-primary {
+  color: #151923;
+  background: linear-gradient(135deg, #f4b74f, #f6f0dd);
+}
+
+.preview-secondary {
+  color: #f5efdd;
+  border: 1px solid rgba(245, 239, 221, 0.3);
+  background: rgba(245, 239, 221, 0.08);
+}
+
+.preview-primary:hover,
+.preview-secondary:hover {
+  transform: translateY(-2px);
+}
+
+.preview-genre-row {
+  margin: 0.4rem 0 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.preview-genre-btn {
+  border: 1px solid rgba(245, 239, 221, 0.3);
+  background: rgba(245, 239, 221, 0.08);
+  color: #f5efdd;
+  border-radius: 999px;
+  padding: 0.42rem 0.8rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.preview-genre-btn.active {
+  color: #151923;
+  background: linear-gradient(135deg, #f4b74f, #f6f0dd);
+  border-color: transparent;
+}
+
+.preview-loading,
+.preview-empty {
+  border-radius: 0.9rem;
+  padding: 1.1rem;
+  border: 1px solid rgba(245, 239, 221, 0.18);
+  background: rgba(245, 239, 221, 0.06);
+}
+
+.preview-grid {
+  display: grid;
+  gap: 0.95rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.preview-card {
+  border-radius: 0.95rem;
+  padding: 0.7rem;
+  background: linear-gradient(150deg, rgba(245, 239, 221, 0.1), rgba(20, 24, 36, 0.74));
+  border: 1px solid rgba(245, 239, 221, 0.2);
+}
+
+.preview-poster-wrap {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 0.62rem;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.preview-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preview-card h2 {
+  margin: 0.62rem 0 0;
+  font-size: 1rem;
+}
+
+.preview-meta {
+  margin: 0.3rem 0 0;
+  color: rgba(245, 239, 221, 0.82);
+  font-size: 0.85rem;
+}
+
+.preview-price {
+  margin: 0.36rem 0 0;
+  font-weight: 700;
+  color: #f4b74f;
+}
+
+.preview-pagination {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.preview-page-btn {
+  border: 1px solid rgba(245, 239, 221, 0.3);
+  background: rgba(245, 239, 221, 0.08);
+  color: #f5efdd;
+  border-radius: 999px;
+  padding: 0.48rem 0.9rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.preview-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.preview-page-info {
+  color: rgba(245, 239, 221, 0.85);
+  font-size: 0.92rem;
+}

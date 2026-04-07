@@ -1,0 +1,299 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap");
+
+:root {
+  --ink-900: #11131c;
+  --ink-800: #171a24;
+  --ink-700: #202538;
+  --cream-100: #f6f0dd;
+  --cream-200: #e5dbbe;
+  --amber-400: #f4b74f;
+  --amber-500: #d9931f;
+  --teal-400: #35b8a7;
+  --rose-400: #e66a73;
+  --line-soft: rgba(246, 240, 221, 0.2);
+}
+
+.landing-page {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(53, 184, 167, 0.22), transparent 34%),
+    radial-gradient(circle at 80% 18%, rgba(230, 106, 115, 0.22), transparent 34%),
+    linear-gradient(155deg, #11131c 20%, #202538 65%, #171a24 100%);
+  color: var(--cream-100);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+.landing-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.2;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.35) 0.4px, transparent 0.4px);
+  background-size: 3px 3px;
+}
+
+.landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem clamp(1rem, 4vw, 3.5rem);
+  backdrop-filter: blur(10px);
+  background: rgba(17, 19, 28, 0.62);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: var(--cream-100);
+}
+
+.brand-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.5rem;
+  display: grid;
+  place-items: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--amber-400), var(--teal-400));
+}
+
+.brand-text {
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.07em;
+  font-size: 1.6rem;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.nav-link-btn,
+.nav-cta-btn {
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  transition: transform 240ms ease, background 240ms ease, box-shadow 240ms ease;
+}
+
+.nav-link-btn {
+  color: var(--cream-100);
+  border: 1px solid var(--line-soft);
+  background: rgba(246, 240, 221, 0.06);
+}
+
+.nav-cta-btn {
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--amber-400), var(--cream-200));
+}
+
+.nav-link-btn:hover,
+.nav-cta-btn:hover {
+  transform: translateY(-1px);
+}
+
+.hero-stage {
+  position: relative;
+  z-index: 1;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 8vw, 5rem) clamp(1rem, 4vw, 3.5rem) 2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--amber-400);
+  font-size: 0.74rem;
+  animation: fade-rise 700ms ease both;
+}
+
+.hero-stage h1 {
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.035em;
+  line-height: 0.95;
+  font-size: clamp(2.7rem, 8.5vw, 6rem);
+  margin: 0.7rem 0 0;
+  animation: fade-rise 780ms ease both;
+}
+
+.hero-copy {
+  margin: 1rem 0 0;
+  max-width: 46rem;
+  color: rgba(246, 240, 221, 0.85);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  animation: fade-rise 860ms ease both;
+}
+
+.hero-actions {
+  margin-top: 1.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  animation: fade-rise 940ms ease both;
+}
+
+.primary-action,
+.secondary-action,
+.final-cta-btn {
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.72rem 1.25rem;
+  font-weight: 700;
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.primary-action,
+.final-cta-btn {
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--amber-400), var(--cream-200));
+  box-shadow: 0 12px 28px rgba(217, 147, 31, 0.3);
+}
+
+.secondary-action {
+  color: var(--cream-100);
+  border: 1px solid var(--line-soft);
+  background: rgba(246, 240, 221, 0.07);
+}
+
+.primary-action:hover,
+.secondary-action:hover,
+.final-cta-btn:hover {
+  transform: translateY(-2px);
+}
+
+.spotlight-grid {
+  margin-top: 2.2rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+}
+
+.spotlight-card {
+  padding: 1rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(155deg, rgba(246, 240, 221, 0.08), rgba(23, 26, 36, 0.6));
+  border: 1px solid rgba(246, 240, 221, 0.14);
+  animation: fade-rise 850ms ease both;
+}
+
+.spotlight-card:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.spotlight-card:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.spotlight-tag {
+  display: inline-block;
+  margin-bottom: 0.45rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--teal-400), #7ce3c8);
+}
+
+.spotlight-card h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.spotlight-card p {
+  margin: 0.5rem 0 0;
+  color: rgba(246, 240, 221, 0.83);
+}
+
+.genre-wall {
+  position: relative;
+  z-index: 1;
+  max-width: 72rem;
+  margin: 1.5rem auto 0;
+  padding: 0 clamp(1rem, 4vw, 3.5rem) 2.4rem;
+}
+
+.genre-wall h2 {
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  margin: 0;
+}
+
+.genre-list {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.7rem;
+}
+
+.genre-pill {
+  display: block;
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(246, 240, 221, 0.24);
+  background: linear-gradient(140deg, rgba(246, 240, 221, 0.1), rgba(32, 37, 56, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 220ms ease, border-color 220ms ease;
+  text-decoration: none;
+  color: var(--cream-100);
+}
+
+.genre-pill h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.genre-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(244, 183, 79, 0.8);
+}
+
+.genre-copy {
+  margin: 0.5rem 0 0;
+  color: rgba(246, 240, 221, 0.82);
+}
+
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 680px) {
+  .landing-nav {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+  }
+
+  .brand-text {
+    font-size: 1.3rem;
+  }
+
+  .nav-link-btn,
+  .nav-cta-btn {
+    padding: 0.5rem 0.88rem;
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,230 @@
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(53, 184, 167, 0.2), transparent 32%),
+    radial-gradient(circle at 84% 18%, rgba(230, 106, 115, 0.18), transparent 34%),
+    linear-gradient(155deg, var(--ink-900) 20%, var(--ink-700) 70%, var(--ink-800));
+}
+
+.login-back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  text-decoration: none;
+  color: var(--cream-100);
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: rgba(246, 240, 221, 0.08);
+  font-weight: 600;
+}
+
+.login-card {
+  width: min(460px, 100%);
+  border-radius: 1.1rem;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(155deg, var(--panel-strong), rgba(17, 19, 28, 0.78));
+  backdrop-filter: blur(12px);
+  padding: 2rem 1.8rem 1.6rem;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.4);
+  animation: login-rise 450ms ease both;
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 1.4rem;
+}
+
+.login-brand-icon {
+  font-size: 1.85rem;
+  display: block;
+}
+
+.login-brand-name {
+  margin-top: 0.35rem;
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.08em;
+  font-size: 2rem;
+}
+
+.login-brand-tagline {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  margin-top: 0.1rem;
+}
+
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--line-soft);
+  background: rgba(246, 240, 221, 0.05);
+  margin-bottom: 1.25rem;
+}
+
+.mode-btn {
+  border: none;
+  border-radius: 0.6rem;
+  padding: 0.6rem;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.mode-btn.active {
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--amber-400), var(--cream-200));
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+
+.input-group label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.input-group input,
+.input-group select {
+  border: 1px solid var(--line-soft);
+  background: rgba(246, 240, 221, 0.05);
+  color: var(--cream-100);
+  border-radius: 0.6rem;
+  padding: 0.72rem 0.88rem;
+  outline: none;
+  font-size: 0.94rem;
+  transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.input-group input::placeholder {
+  color: rgba(246, 240, 221, 0.45);
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  border-color: var(--teal-400);
+  background: rgba(53, 184, 167, 0.08);
+  box-shadow: 0 0 0 3px rgba(53, 184, 167, 0.22);
+}
+
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+}
+
+.remember-me input[type="checkbox"] {
+  accent-color: var(--teal-400);
+}
+
+.forgot-link,
+.signup-prompt a {
+  color: var(--amber-400);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-btn {
+  margin-top: 0.25rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.78rem 1rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--amber-400), var(--cream-200));
+  cursor: pointer;
+  min-height: 44px;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  box-shadow: 0 12px 26px rgba(217, 147, 31, 0.26);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.login-btn.loading,
+.login-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(17, 19, 28, 0.2);
+  border-top-color: var(--ink-900);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-error {
+  border: 1px solid rgba(230, 106, 115, 0.48);
+  background: rgba(230, 106, 115, 0.13);
+  color: #ffd8db;
+  border-radius: 0.6rem;
+  padding: 0.62rem 0.75rem;
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+.signup-prompt {
+  text-align: center;
+  margin-top: 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.83rem;
+}
+
+.optional {
+  color: rgba(246, 240, 221, 0.55);
+  font-size: 0.75rem;
+}

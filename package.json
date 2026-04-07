@@ -1,0 +1,30 @@
+{
+  "name": "video-shoppe",
+  "version": "1.0.0",
+  "description": "DVD Rental & Sales Platform - Cross-platform (Windows, macOS, Linux)",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "setup:sh": "bash scripts/setup.sh",
+    "verify": "node scripts/verify.js",
+    "verify:sh": "bash scripts/verify.sh",
+    "dev:frontend": "cd Frontend/React && npm run dev",
+    "dev:backend": "cd Backend && npm run dev",
+    "start": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start:sh": "bash scripts/start.sh",
+    "frontend": "cd Frontend/React && npm run dev",
+    "backend": "cd Backend && npm run dev",
+    "prisma:generate": "cd Backend && npx prisma generate",
+    "prisma:studio": "cd Backend && npx prisma studio",
+    "prisma:push": "cd Backend && npx prisma db push"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "dvd",
+    "rental",
+    "ecommerce"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,74 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --ink-900: #11131c;
+  --ink-850: #151924;
+  --ink-800: #171a24;
+  --ink-700: #202538;
+  --ink-650: #262d43;
+  --cream-100: #f6f0dd;
+  --cream-200: #e5dbbe;
+  --cream-300: #c9c2aa;
+  --amber-400: #f4b74f;
+  --amber-500: #d9931f;
+  --teal-400: #35b8a7;
+  --rose-400: #e66a73;
+  --line-soft: rgba(246, 240, 221, 0.2);
+  --panel: rgba(246, 240, 221, 0.06);
+  --panel-strong: rgba(246, 240, 221, 0.1);
+  --text-main: var(--cream-100);
+  --text-muted: rgba(246, 240, 221, 0.74);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  background: linear-gradient(160deg, var(--ink-900) 18%, var(--ink-700) 66%, var(--ink-800));
+  color: var(--text-main);
+}
+
+a {
+  color: inherit;
+}
+
+.coming-soon {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.coming-soon-card {
+  width: min(620px, 100%);
+  text-align: center;
+  border-radius: 1rem;
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(155deg, var(--panel-strong), rgba(17, 19, 28, 0.7));
+  padding: 2rem 1.5rem;
+}
+
+.coming-soon-card h2 {
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.06em;
+  font-size: clamp(2rem, 6vw, 3rem);
+}
+
+.coming-soon-card p {
+  color: var(--text-muted);
+  margin-top: 0.6rem;
+}

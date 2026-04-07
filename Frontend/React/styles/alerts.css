@@ -1,0 +1,200 @@
+.alerts-page {
+  min-height: 100vh;
+  padding: calc(72px + 1.4rem) clamp(1rem, 4vw, 3.2rem) 2.2rem;
+  background:
+    radial-gradient(circle at 10% 8%, rgba(53, 184, 167, 0.12), transparent 34%),
+    radial-gradient(circle at 88% 14%, rgba(230, 106, 115, 0.1), transparent 32%),
+    linear-gradient(160deg, #11131c 21%, #1f2538 74%, #171a24 100%);
+}
+
+.alerts-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  color: var(--cream-100);
+}
+
+.alerts-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.9rem;
+}
+
+.alerts-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  color: var(--amber-400);
+}
+
+.alerts-head h1 {
+  margin: 0.45rem 0 0;
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  font-size: clamp(2rem, 5vw, 3.1rem);
+}
+
+.alerts-head-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.alerts-btn {
+  border: 1px solid var(--line-soft);
+  background: rgba(246, 240, 221, 0.08);
+  color: var(--cream-100);
+  border-radius: 999px;
+  padding: 0.45rem 0.88rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.alerts-btn-primary {
+  border: none;
+  color: var(--ink-900);
+  background: linear-gradient(135deg, var(--amber-400), var(--cream-200));
+}
+
+.alerts-error {
+  margin: 0;
+  color: #ffb0b6;
+  font-size: 0.82rem;
+}
+
+.alerts-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.alerts-stat-card,
+.alerts-section {
+  border: 1px solid rgba(246, 240, 221, 0.2);
+  background: linear-gradient(155deg, rgba(246, 240, 221, 0.1), rgba(17, 19, 28, 0.8));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.alerts-stat-card {
+  border-radius: 1rem;
+  padding: 1rem 1.05rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 112px;
+  justify-content: center;
+}
+
+.alerts-stat-card-warning .alerts-stat-num {
+  color: #ff8d93;
+}
+
+.alerts-stat-num {
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--teal-400);
+  margin-bottom: 0.45rem;
+}
+
+.alerts-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.alerts-section {
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.alerts-section h2 {
+  font-family: "Bebas Neue", "Trebuchet MS", sans-serif;
+  letter-spacing: 0.05em;
+  font-size: 1.45rem;
+  margin: 0;
+}
+
+.alerts-helper {
+  margin: 0.28rem 0 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.alerts-card {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgba(246, 240, 221, 0.16);
+  border-radius: 0.8rem;
+  background: rgba(17, 19, 28, 0.45);
+  padding: 0.55rem;
+}
+
+.alerts-card-overdue {
+  border-color: rgba(255, 141, 147, 0.45);
+  background: rgba(110, 24, 36, 0.2);
+}
+
+.alerts-card-image {
+  width: 62px;
+  height: 82px;
+  object-fit: cover;
+  border-radius: 0.52rem;
+}
+
+.alerts-card-content strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.alerts-card-content p {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.alerts-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.2rem 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .alerts-grid,
+  .alerts-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .alerts-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
