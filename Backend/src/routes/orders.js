@@ -2,10 +2,13 @@
 import express from "express";
 import { OrderType, PendingCheckoutStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-import { requireStripe } from "../lib/stripe.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { requireStripe } from "../lib/stripe.js"; 
+import Stripe from "stripe";
+import crypto from "crypto";
 
 const router = express.Router();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Group matching cart lines before checkout so totals stay clean.
 function normalizeItems(items = []) {
@@ -49,6 +52,25 @@ function toCheckoutLineItems(items = []) {
   }));
 }
 
+// Stripe Payment 
+router.post("/create-payment-intent", requireAuth, async (req, res) => {
+  const { amount } = req.body;
+  if (!amount || amount <= 0) return res.status(400).json({ error: "Invalid amount." });
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount),
+      currency: "usd",
+      metadata: { userId: req.user.userId },
+    });
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    console.error("Stripe Error:", err);
+    res.status(500).json({ error: "Failed to initialize Stripe." });
+  }
+});
+
+// Stripe Checkout Session
 router.post("/checkout/session", requireAuth, async (req, res) => {
   const userId = req.user.userId;
   const normalizedItems = normalizeItems(req.body?.items);
@@ -62,16 +84,14 @@ router.post("/checkout/session", requireAuth, async (req, res) => {
   }
 
   try {
-    const stripe = requireStripe();
+    const stripeInstance = requireStripe();
     const sessionPayload = await prisma.$transaction(async (tx) => {
       const customer = await tx.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true },
       });
 
-      if (!customer?.name) {
-        throw new Error("MISSING_NAME");
-      }
+      if (!customer?.name) throw new Error("MISSING_NAME");
 
       const ids = [...new Set(normalizedItems.map((item) => item.id))];
       const inventoryRows = await tx.inventory.findMany({
@@ -117,31 +137,21 @@ router.post("/checkout/session", requireAuth, async (req, res) => {
         },
       });
 
-      return {
-        customer,
-        pendingCheckoutId: pendingCheckout.id,
-        totalAmount,
-        orderItemsData,
-      };
+      return { customer, pendingCheckoutId: pendingCheckout.id, orderItemsData };
     });
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripeInstance.checkout.sessions.create({
       mode: "payment",
       customer_email: sessionPayload.customer.email,
-      success_url: `${process.env.CLIENT_URL || "http://localhost:5173"}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL || "http://localhost:5173"}/cart`,
-      metadata: {
-        pendingCheckoutId: sessionPayload.pendingCheckoutId,
-        userId,
-      },
+      success_url: `${process.env.CLIENT_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/cart`,
+      metadata: { pendingCheckoutId: sessionPayload.pendingCheckoutId, userId },
       line_items: toCheckoutLineItems(sessionPayload.orderItemsData),
     });
 
     await prisma.pendingCheckout.update({
       where: { id: sessionPayload.pendingCheckoutId },
-      data: {
-        stripeSessionId: session.id,
-      },
+      data: { stripeSessionId: session.id },
     });
 
     return res.status(201).json({ url: session.url });
@@ -172,13 +182,11 @@ router.post("/checkout/confirm", requireAuth, async (req, res) => {
   const userId = req.user.userId;
   const sessionId = String(req.body?.sessionId || "").trim();
 
-  if (!sessionId) {
-    return res.status(400).json({ error: "Stripe session id is required." });
-  }
+  if (!sessionId) return res.status(400).json({ error: "Stripe session id is required." });
 
   try {
-    const stripe = requireStripe();
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const stripeInstance = requireStripe(); 
+    const session = await stripeInstance.checkout.sessions.retrieve(sessionId);
 
     if (session.payment_status !== "paid") {
       return res.status(400).json({ error: "Stripe payment has not completed yet." });
@@ -190,104 +198,96 @@ router.post("/checkout/confirm", requireAuth, async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      const pending = await tx.pendingCheckout.findFirst({
-        where: { id: pendingCheckoutId, userId },
-      });
-
-      if (!pending) {
-        throw new Error("PENDING_NOT_FOUND");
-      }
-
-      if (pending.status === PendingCheckoutStatus.COMPLETED && pending.completedOrderId) {
-        const existingOrder = await tx.order.findUnique({
-          where: { id: pending.completedOrderId },
-          include: { items: true },
-        });
-        return existingOrder;
-      }
-
-      const normalizedOrderItems = Array.isArray(pending.itemsJson) ? pending.itemsJson : [];
-      const ids = normalizedOrderItems.map((item) => item.inventoryId);
-      const inventoryRows = await tx.inventory.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, name: true, stock: true },
-      });
-      const stockById = new Map(inventoryRows.map((row) => [row.id, row]));
-
-      for (const item of normalizedOrderItems) {
-        const row = stockById.get(item.inventoryId);
-        if (!row) throw new Error(`NOT_FOUND:${item.inventoryId}`);
-        if (row.stock < item.quantity) {
-          throw new Error(`INSUFFICIENT_STOCK:${row.id}:${row.name}:${row.stock}:${item.quantity}`);
-        }
-      }
+      const pending = await tx.pendingCheckout.findFirst({ where: { id: pendingCheckoutId, userId } });
+      if (!pending || pending.status === PendingCheckoutStatus.COMPLETED) return null;
 
       await tx.user.update({
         where: { id: userId },
-        data: {
-          phone: pending.contactPhone,
-          address: pending.contactAddress,
-        },
+        data: { phone: pending.contactPhone, address: pending.contactAddress },
       });
 
-      for (const item of normalizedOrderItems) {
-        await tx.inventory.update({
-          where: { id: item.inventoryId },
-          data: { stock: { decrement: item.quantity } },
+      const items = Array.isArray(pending.itemsJson) ? pending.itemsJson : [];
+      
+      for (const item of items) {
+        await tx.inventory.update({ 
+          where: { id: item.inventoryId }, 
+          data: { stock: { decrement: item.quantity } } 
         });
       }
 
       const order = await tx.order.create({
         data: {
           userId,
-          totalAmount: Number(pending.totalAmount.toFixed(2)),
-          items: {
-            create: normalizedOrderItems.map((item) => ({
-              inventoryId: item.inventoryId,
-              title: item.title,
-              quantity: item.quantity,
-              unitPrice: Number(Number(item.unitPrice).toFixed(2)),
-              orderType: item.orderType,
-            })),
+          totalAmount: pending.totalAmount,
+          items: { 
+            create: items.map(i => ({
+              inventoryId: i.inventoryId,
+              title: i.title,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+              orderType: i.orderType
+            }))
           },
-        },
-        include: {
-          items: true,
         },
       });
 
-      await tx.pendingCheckout.update({
-        where: { id: pending.id },
-        data: {
-          status: PendingCheckoutStatus.COMPLETED,
-          completedOrderId: order.id,
-        },
+      await tx.pendingCheckout.update({ 
+        where: { id: pending.id }, 
+        data: { status: PendingCheckoutStatus.COMPLETED, completedOrderId: order.id } 
       });
 
       return order;
     });
 
-    return res.status(201).json({ message: "Checkout completed.", order: result });
+    res.status(201).json({ message: "Order confirmed.", order: result });
   } catch (err) {
-    const message = String(err?.message || "");
-    if (message === "STRIPE_NOT_CONFIGURED") {
-      return res.status(500).json({ error: "Stripe is not configured on the server yet." });
-    }
-    if (message === "PENDING_NOT_FOUND") {
-      return res.status(404).json({ error: "Pending checkout was not found." });
-    }
-    if (message.startsWith("NOT_FOUND:")) {
-      const [, id] = message.split(":");
-      return res.status(404).json({ error: `DVD ${id} was not found.` });
-    }
-    if (message.startsWith("INSUFFICIENT_STOCK:")) {
-      const [, id, name, stock, requested] = message.split(":");
-      return res.status(409).json({
-        error: `Not enough stock for "${name}" (ID ${id}). In stock: ${stock}, requested: ${requested}.`,
+    console.error(err);
+    res.status(500).json({ error: "Confirmation failed." });
+  }
+});
+
+router.post("/checkout", requireAuth, async (req, res) => {
+  const userId = req.user.userId;
+  const { items: rawItems, contact } = req.body;
+  const normalizedItems = normalizeItems(rawItems);
+
+  if (normalizedItems.length === 0 || !contact?.phone || !contact?.address) {
+    return res.status(400).json({ error: "Invalid checkout data." });
+  }
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { phone: contact.phone, address: contact.address },
       });
-    }
-    console.error("Confirm checkout error:", err);
-    return res.status(500).json({ error: "Failed to confirm Stripe checkout." });
+
+      const ids = [...new Set(normalizedItems.map((i) => i.id))];
+      const inventory = await tx.inventory.findMany({ where: { id: { in: ids } } });
+      const stockMap = new Map(inventory.map((r) => [r.id, r]));
+
+      const orderLines = normalizedItems.map((item) => {
+        const row = stockMap.get(item.id);
+        if (!row || row.stock < item.quantity) throw new Error("Stock error.");
+        const unitPrice = item.orderType === OrderType.PURCHASE ? row.price * 5 : row.price;
+        return { inventoryId: row.id, title: row.name, quantity: item.quantity, unitPrice, orderType: item.orderType };
+      });
+
+      for (const line of orderLines) {
+        await tx.inventory.update({ where: { id: line.inventoryId }, data: { stock: { decrement: line.quantity } } });
+      }
+
+      return tx.order.create({
+        data: {
+          userId,
+          totalAmount: orderLines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0),
+          items: { create: orderLines },
+        },
+      });
+    });
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Checkout failed." });
   }
 });
 
@@ -295,112 +295,51 @@ router.get("/mine", requireAuth, async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { userId: req.user.userId },
-      include: {
-        items: {
-          include: {
-            inventory: {
-              select: { image: true },
-            },
-          },
-        },
-      },
+      include: { items: { include: { inventory: { select: { image: true } } } } },
       orderBy: { createdAt: "desc" },
     });
-    return res.json(orders);
+    res.json(orders);
   } catch (err) {
-    console.error("Fetch my orders error:", err);
-    return res.status(500).json({ error: "Failed to fetch customer orders." });
+    res.status(500).json({ error: "Failed to fetch orders." });
   }
 });
 
-router.get("/customers", requireAuth, requireRole(["EMPLOYEE", "OWNER"]), async (req, res) => {
+router.get("/:orderId", requireAuth, requireRole(["EMPLOYEE", "OWNER"]), async (req, res) => {
   try {
-    const customers = await prisma.user.findMany({
-      where: { role: "CUSTOMER" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        address: true,
-        createdAt: true,
-        _count: {
-          select: { orders: true },
-        },
-      },
-      orderBy: [
-        { name: "asc" },
-        { email: "asc" },
-      ],
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.orderId },
+      include: { items: true, user: true },
     });
-
-    return res.json(customers);
+    res.json(order);
   } catch (err) {
-    console.error("Fetch customers error:", err);
-    return res.status(500).json({ error: "Failed to fetch customers." });
+    res.status(500).json({ error: "Failed to fetch order detail." });
   }
 });
 
-router.get("/customers/:userId", requireAuth, requireRole(["EMPLOYEE", "OWNER"]), async (req, res) => {
+router.get("/customer/:userId", requireAuth, requireRole(["EMPLOYEE", "OWNER"]), async (req, res) => {
   try {
-    const customer = await prisma.user.findFirst({
-      where: { id: req.params.userId, role: "CUSTOMER" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        address: true,
-        createdAt: true,
-        isActive: true,
-      },
-    });
-
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found." });
-    }
-
+    const customer = await prisma.user.findUnique({ where: { id: req.params.userId } });
     const orders = await prisma.order.findMany({
       where: { userId: req.params.userId },
-      include: {
-        items: {
-          include: {
-            inventory: {
-              select: { image: true },
-            },
-          },
-        },
-      },
+      include: { items: true },
       orderBy: { createdAt: "desc" },
     });
-
-    return res.json({ customer, orders });
+    res.json({ customer, orders });
   } catch (err) {
-    console.error("Fetch customer detail error:", err);
-    return res.status(500).json({ error: "Failed to fetch customer details." });
+    res.status(500).json({ error: "Failed to fetch customer history." });
   }
 });
 
 router.get("/recent", requireAuth, requireRole(["EMPLOYEE", "OWNER"]), async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
-      include: {
-        items: {
-          include: {
-            inventory: {
-              select: { image: true },
-            },
-          },
-        },
-        user: { select: { id: true, name: true, email: true, role: true } },
-      },
+      include: { items: true, user: { select: { name: true, email: true } } },
       orderBy: { createdAt: "desc" },
       take: 50,
     });
-    return res.json(orders);
+    res.json(orders);
   } catch (err) {
-    console.error("Fetch recent orders error:", err);
-    return res.status(500).json({ error: "Failed to fetch recent orders." });
+    res.status(500).json({ error: "Failed to fetch activity feed." });
   }
 });
 

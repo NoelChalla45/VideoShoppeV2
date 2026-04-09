@@ -7,12 +7,96 @@ import { apiFetchJson } from "../utils/api";
 import { getStoredUser, getToken } from "../utils/auth";
 import { getActiveRentalQuantityFromOrders } from "../utils/orders";
 import { canCheckoutRentals } from "../utils/rentalRules";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+
+function StripeCheckoutForm({
+  items,
+  total,
+  phone,
+  address,
+  onSuccess,
+  setIsCheckingOut,
+  isCheckingOut,
+  onCancel
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const token = getToken();
+
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setIsCheckingOut(true);
+
+    try {
+      const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+
+      const intentRes = await fetch(`${API}/api/orders/create-payment-intent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": authHeader },
+        body: JSON.stringify({ amount: Math.round(total * 100) }),
+      });
+
+      const { clientSecret, error: intentErr } = await intentRes.json();
+      if (!intentRes.ok) throw new Error(intentErr || "Server error.");
+
+      const { error: stripeErr, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: elements.getElement(CardElement) },
+      });
+
+      if (stripeErr) throw new Error(stripeErr.message);
+
+      if (paymentIntent.status === "succeeded") {
+        const orderRes = await fetch(`${API}/api/orders/checkout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": authHeader },
+          body: JSON.stringify({
+            items: items.map(i => ({ id: i.id, quantity: i.quantity, mode: i.mode })),
+            contact: { phone, address }
+          }),
+        });
+
+        const orderData = await orderRes.json();
+        if (!orderRes.ok) throw new Error(orderData.error || "Order failed to save.");
+
+        onSuccess();
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handlePayment} className="stripe-form">
+      <div className="card-input-container" style={{ padding: '12px', background: '#1a1a1a', borderRadius: '4px', marginBottom: '15px', border: '1px solid #333' }}>
+        <CardElement options={{
+          hidePostalCode: true,
+          style: { base: { fontSize: "16px", color: "#fff", "::placeholder": { color: "#666" } } }
+        }} />
+      </div>
+      <button className="cart-primary-btn" type="submit" disabled={isCheckingOut || !stripe}>
+        {isCheckingOut ? "Processing..." : `Pay $${total.toFixed(2)}`}
+      </button>
+      <button className="cart-secondary-btn full" type="button" onClick={onCancel} disabled={isCheckingOut} style={{ marginTop: '10px' }}>
+        Back to Details
+      </button>
+    </form>
+  );
+}
 
 export default function Cart() {
   const navigate = useNavigate();
   const user = getStoredUser();
   const userId = user?.id || "";
   const token = getToken();
+
   const [items, setItems] = useState(getCartItems());
   const [checkoutForm, setCheckoutForm] = useState({
     phone: user?.phone || "",
@@ -22,6 +106,7 @@ export default function Cart() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [activeRentalQty, setActiveRentalQty] = useState(0);
   const [isLoadingRentalState, setIsLoadingRentalState] = useState(true);
+  const [showStripe, setShowStripe] = useState(false);
 
   // Build the order summary values shown in the sidebar.
   const totals = useMemo(() => {
@@ -84,48 +169,21 @@ export default function Cart() {
     setItems([]);
   };
 
-  const handleCheckout = async () => {
-    if (!user || items.length === 0 || isCheckingOut) return;
-
-    const phone = checkoutForm.phone.trim();
-    const address = checkoutForm.address.trim();
-
+  const handleProceedToPayment = () => {
     setCheckoutError("");
-    setIsCheckingOut(true);
-
-    try {
-      if (!phone || !address) {
-        setCheckoutError("Phone number and address are required before checkout.");
-        setIsCheckingOut(false);
-        return;
-      }
-
-      const limitCheck = canCheckoutRentals(activeRentalQty);
-      if (!limitCheck.allowed) {
-        setCheckoutError(`You can only rent up to ${limitCheck.maxAllowed} DVDs at a time.`);
-        setIsCheckingOut(false);
-        return;
-      }
-
-      const payload = await apiFetchJson("/api/orders/checkout/session", {
-        method: "POST",
-        token,
-        body: JSON.stringify({
-          contact: { phone, address },
-          items: items.map((item) => ({ id: item.id, quantity: item.quantity, mode: item.mode })),
-        }),
-        errorMessage: "Failed to start Stripe checkout.",
-      });
-
-      if (!payload?.url) {
-        throw new Error("Stripe checkout URL was not returned.");
-      }
-
-      window.location.assign(payload.url);
-    } catch (err) {
-      setCheckoutError(err.message || "Could not reach server to start Stripe checkout.");
-      setIsCheckingOut(false);
+    
+    if (!checkoutForm.phone.trim() || !checkoutForm.address.trim()) {
+      setCheckoutError("Phone number and address are required before checkout.");
+      return;
     }
+
+    const limitCheck = canCheckoutRentals(activeRentalQty);
+    if (!limitCheck.allowed) {
+      setCheckoutError(`You can only rent up to ${limitCheck.maxAllowed} DVDs at a time.`);
+      return;
+    }
+
+    setShowStripe(true);
   };
 
   return (
@@ -187,32 +245,55 @@ export default function Cart() {
                 <span>Subtotal</span>
                 <span>${totals.subtotal.toFixed(2)}</span>
               </div>
-              <div className="cart-checkout-fields">
-                <div className="cart-field">
-                  <label htmlFor="checkout-phone">Phone Number</label>
-                  <input
-                    id="checkout-phone"
-                    type="tel"
-                    value={checkoutForm.phone}
-                    onChange={(e) => setCheckoutForm((prev) => ({ ...prev, phone: e.target.value }))}
-                    placeholder="(555) 123-4567"
-                  />
+
+              {!showStripe ? (
+                <div className="cart-checkout-fields">
+                  <div className="cart-field">
+                    <label htmlFor="checkout-phone">Phone Number</label>
+                    <input
+                      id="checkout-phone"
+                      type="tel"
+                      value={checkoutForm.phone}
+                      onChange={(e) => setCheckoutForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div className="cart-field">
+                    <label htmlFor="checkout-address">Address</label>
+                    <textarea
+                      id="checkout-address"
+                      value={checkoutForm.address}
+                      onChange={(e) => setCheckoutForm((prev) => ({ ...prev, address: e.target.value }))}
+                      placeholder="123 Main St, City, State ZIP"
+                      rows="3"
+                    />
+                  </div>
+                  <button className="cart-primary-btn" onClick={handleProceedToPayment} disabled={isLoadingRentalState}>
+                    {isLoadingRentalState ? "Loading..." : "Proceed to Payment"}
+                  </button>
                 </div>
-                <div className="cart-field">
-                  <label htmlFor="checkout-address">Address</label>
-                  <textarea
-                    id="checkout-address"
-                    value={checkoutForm.address}
-                    onChange={(e) => setCheckoutForm((prev) => ({ ...prev, address: e.target.value }))}
-                    placeholder="123 Main St, City, State ZIP"
-                    rows="3"
-                  />
+              ) : (
+                <div className="stripe-checkout-section">
+                  <p style={{ color: '#aaa', fontSize: '0.85rem', marginBottom: '10px' }}>Secure Stripe Payment</p>
+                  <Elements stripe={stripePromise}>
+                    <StripeCheckoutForm
+                      items={items}
+                      total={totals.subtotal}
+                      phone={checkoutForm.phone}
+                      address={checkoutForm.address}
+                      isCheckingOut={isCheckingOut}
+                      setIsCheckingOut={setIsCheckingOut}
+                      onCancel={() => setShowStripe(false)}
+                      onSuccess={() => { 
+                        handleClear(); 
+                        navigate("/account"); 
+                      }}
+                    />
+                  </Elements>
                 </div>
-              </div>
-              <button className="cart-primary-btn" onClick={handleCheckout} disabled={isCheckingOut || isLoadingRentalState}>
-                {isLoadingRentalState ? "Loading..." : isCheckingOut ? "Redirecting..." : "Checkout with Stripe"}
-              </button>
-              <button className="cart-secondary-btn full" onClick={handleClear}>
+              )}
+
+              <button className="cart-secondary-btn full" onClick={handleClear} disabled={isCheckingOut}>
                 Clear Cart
               </button>
               {checkoutError && <p className="cart-error">{checkoutError}</p>}

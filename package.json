@@ -26,5 +26,10 @@
     "ecommerce"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@stripe/react-stripe-js": "^6.1.0",
+    "@stripe/stripe-js": "^9.1.0",
+    "stripe": "^22.0.0"
+  }
 }
